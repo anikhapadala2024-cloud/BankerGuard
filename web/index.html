@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BankerGuard resource allocation and deadlock avoidance simulator">
+    <title>BankerGuard | Resource Allocation Simulator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="app-layout">
+
+```
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">BG</div>
+            <div>
+                <h2>BankerGuard</h2>
+                <p>RESOURCE MANAGEMENT</p>
+            </div>
+        </div>
+
+        <nav class="navigation" aria-label="Main navigation">
+            <a class="nav-link active" href="#overview">▦ &nbsp; Overview</a>
+            <a class="nav-link" href="#resources">▤ &nbsp; Resources</a>
+            <a class="nav-link" href="#simulator">⇄ &nbsp; Request Simulator</a>
+            <a class="nav-link" href="#activity">☷ &nbsp; Activity Log</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-dot"></div>
+            <div>
+                <strong>Algorithm Engine</strong>
+                <p>Demo mode active</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">OPERATING SYSTEMS PROJECT</p>
+                <h1>Resource Dashboard</h1>
+            </div>
+            <div class="topbar-badge">
+                <span class="status-dot"></span>
+                System Monitor
+            </div>
+        </header>
+
+        <section id="overview" class="welcome-section">
+            <div>
+                <p class="eyebrow">BANKER'S ALGORITHM</p>
+                <h2>Welcome to BankerGuard</h2>
+                <p>Monitor resource allocation, evaluate requests, and prevent unsafe system states.</p>
+            </div>
+            <div class="welcome-symbol" aria-hidden="true">⬡</div>
+        </section>
+
+        <section class="stats-grid" aria-label="System summary">
+            <article class="stat-card">
+                <div class="stat-heading">
+                    <span>Total Processes</span>
+                    <span class="stat-icon">▦</span>
+                </div>
+                <p class="stat-number" id="process-count">5</p>
+                <p class="stat-description">Active processes</p>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-heading">
+                    <span>Resource Types</span>
+                    <span class="stat-icon">▤</span>
+                </div>
+                <p class="stat-number" id="resource-count">3</p>
+                <p class="stat-description">R0, R1, and R2</p>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-heading">
+                    <span>System Safety</span>
+                    <span class="stat-icon">✓</span>
+                </div>
+                <p class="stat-number safe-text" id="safety-status">SAFE</p>
+                <p class="stat-description" id="safety-description">Safe sequence exists</p>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-heading">
+                    <span>Requests Processed</span>
+                    <span class="stat-icon">⇄</span>
+                </div>
+                <p class="stat-number" id="request-count">0</p>
+                <p class="stat-description">During this session</p>
+            </article>
+        </section>
+
+        <section id="resources" class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">CURRENT SYSTEM STATE</p>
+                    <h2>Resource Allocation Matrix</h2>
+                </div>
+                <span class="small-badge">5 Processes</span>
+            </div>
+
+            <div class="available-box">
+                <div>
+                    <strong>Available Resources</strong>
+                    <p>Currently unallocated resource instances</p>
+                </div>
+                <div class="resource-pills" id="available-resources">
+                    <span>R0: 3</span>
+                    <span>R1: 3</span>
+                    <span>R2: 2</span>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>Allocation</th>
+                            <th>Maximum</th>
+                            <th>Need</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocation-table">
+                        <tr><td>P0</td><td>0 1 0</td><td>7 5 3</td><td>7 4 3</td></tr>
+                        <tr><td>P1</td><td>2 0 0</td><td>3 2 2</td><td>1 2 2</td></tr>
+                        <tr><td>P2</td><td>3 0 2</td><td>9 0 2</td><td>6 0 0</td></tr>
+                        <tr><td>P3</td><td>2 1 1</td><td>2 2 2</td><td>0 1 1</td></tr>
+                        <tr><td>P4</td><td>0 0 2</td><td>4 3 3</td><td>4 3 1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="safe-sequence-box">
+                <div>
+                    <strong>Safe Sequence</strong>
+                    <p>A process completion order that keeps the system safe</p>
+                </div>
+                <div id="safe-sequence" class="sequence">
+                    <span>P1</span><b>→</b>
+                    <span>P3</span><b>→</b>
+                    <span>P4</span><b>→</b>
+                    <span>P0</span><b>→</b>
+                    <span>P2</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="simulator" class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">INTERACTIVE LAB</p>
+                    <h2>Resource Request Simulator</h2>
+                </div>
+                <span class="small-badge">What-if analysis</span>
+            </div>
+
+            <p class="section-description">
+                Choose a process and enter the resource instances it requests.
+                BankerGuard will evaluate the request against the current demo state.
+            </p>
+
+            <form id="request-form">
+                <div class="form-grid">
+                    <label class="form-field">
+                        Process
+                        <select id="process-id" name="process-id">
+                            <option value="0">Process P0</option>
+                            <option value="1">Process P1</option>
+                            <option value="2">Process P2</option>
+                            <option value="3">Process P3</option>
+                            <option value="4">Process P4</option>
+                        </select>
+                    </label>
+
+                    <label class="form-field">
+                        Request R0
+                        <input id="request-r0" type="number" min="0" step="1" value="0" required>
+                    </label>
+
+                    <label class="form-field">
+                        Request R1
+                        <input id="request-r1" type="number" min="0" step="1" value="0" required>
+                    </label>
+
+                    <label class="form-field">
+                        Request R2
+                        <input id="request-r2" type="number" min="0" step="1" value="0" required>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button">Evaluate Request ↗</button>
+                    <button type="reset" class="secondary-button">Clear Form</button>
+                </div>
+            </form>
+
+            <div id="request-result" class="result-box" role="status" aria-live="polite">
+                <strong>Ready to evaluate</strong>
+                <p>Submit a resource request to see its decision.</p>
+            </div>
+        </section>
+
+        <section id="activity" class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">SESSION HISTORY</p>
+                    <h2>Activity Log</h2>
+                </div>
+                <button type="button" id="clear-log" class="secondary-button">Clear Log</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Process</th>
+                            <th>Request</th>
+                            <th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-table">
+                        <tr id="empty-log">
+                            <td colspan="4" class="empty-state">No requests processed yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="page-footer">
+            <p>BankerGuard · Smart Resource Allocation Using Banker's Algorithm</p>
+            <p>Educational simulator · Demo data</p>
+        </footer>
+
+    </main>
+</div>
+```
+
+</body>
+</html>
