@@ -44,6 +44,11 @@ lib.request_resources.argtypes = [
 ]
 lib.request_resources.restype = ctypes.c_int
 
+lib.bank_init.argtypes = [ctypes.POINTER(BankState), ctypes.c_int, ctypes.c_int]
+lib.bank_init.restype = None
+
+lib.release_resources.argtypes = [ctypes.POINTER(BankState), ctypes.c_int]
+lib.release_resources.restype = None
 
 def make_state():
     """Create the standard five-process, three-resource example."""
@@ -173,6 +178,30 @@ class BankerTests(unittest.TestCase):
 
         self.assertEqual(result, REQ_INVALID)
 
+    def test_bank_init_clears_state(self):
+        state = BankState()
+        state.available[0] = 99
+
+        lib.bank_init(ctypes.byref(state), 5, 3)
+
+        self.assertEqual(state.n, 5)
+        self.assertEqual(state.m, 3)
+        self.assertEqual(list(state.available), [0] * MAX_R)
+
+        for pid in range(MAX_P):
+            self.assertEqual(list(state.max[pid]), [0] * MAX_R)
+            self.assertEqual(list(state.alloc[pid]), [0] * MAX_R)
+            self.assertEqual(list(state.need[pid]), [0] * MAX_R)
+
+    def test_release_resources_returns_allocation(self):
+        state = make_state()
+
+        lib.release_resources(ctypes.byref(state), 1)
+
+        self.assertEqual(list(state.available)[:3], [5, 3, 2])
+        self.assertEqual(list(state.alloc[1])[:3], [0, 0, 0])
+        self.assertEqual(list(state.need[1])[:3], [0, 0, 0])
+        self.assertEqual(list(state.max[1])[:3], [0, 0, 0])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
