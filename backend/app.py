@@ -46,6 +46,9 @@ lib.request_resources.argtypes = [
 ]
 lib.request_resources.restype = ctypes.c_int
 
+lib.release_resources.argtypes = [ctypes.POINTER(BankState), ctypes.c_int]
+lib.release_resources.restype = None
+
 
 def create_state(data):
     if not isinstance(data, dict):
@@ -189,6 +192,30 @@ def request_resource():
         return jsonify({
             "result": labels.get(result, "ERROR"),
             "reason": reason.value.decode("utf-8", errors="replace"),
+            "state": state_to_dict(state),
+        })
+    except (ValueError, TypeError) as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.post("/api/release")
+def release_process():
+    try:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            raise ValueError("Request body must be a JSON object.")
+
+        state = create_state(data)
+        pid = data.get("pid")
+
+        if type(pid) is not int or not 0 <= pid < state.n:
+            raise ValueError("pid must identify a valid process.")
+
+        released = [state.alloc[pid][j] for j in range(state.m)]
+        lib.release_resources(ctypes.byref(state), pid)
+
+        return jsonify({
+            "released": released,
             "state": state_to_dict(state),
         })
     except (ValueError, TypeError) as exc:

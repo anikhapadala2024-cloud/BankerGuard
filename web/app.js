@@ -110,6 +110,7 @@ function renderAllocationTable(state) {
             ${Array.from({ length: state.m }, (_, j) => `<th>Alloc R${j}</th>`).join("")}
             ${Array.from({ length: state.m }, (_, j) => `<th>Max R${j}</th>`).join("")}
             ${Array.from({ length: state.m }, (_, j) => `<th>Need R${j}</th>`).join("")}
+            <th>Action</th>
         </tr>
     `;
 
@@ -119,6 +120,7 @@ function renderAllocationTable(state) {
             ${allocation.map(value => `<td>${value}</td>`).join("")}
             ${state.max[i].map(value => `<td>${value}</td>`).join("")}
             ${need[i].map(value => `<td>${value}</td>`).join("")}
+            <td><button type="button" class="release-btn" data-pid="${i}">Release</button></td>
         </tr>
     `).join("");
 
@@ -282,6 +284,29 @@ elements.requestForm.addEventListener("reset", () => {
 elements.clearLog.addEventListener("click", () => {
     activityLog = [];
     renderActivity();
+});
+
+elements.allocationTable.addEventListener("click", async (event) => {
+    const button = event.target.closest(".release-btn");
+    if (!button) return;
+
+    const pid = Number(button.dataset.pid);
+
+    try {
+        const result = await apiPost("/api/release", { ...statePayload(), pid });
+
+        showResult(
+            "Resources released",
+            `P${pid} returned (${result.released.join(", ")}) to the available pool.`,
+            "success"
+        );
+
+        addActivity(pid, result.released, "RELEASED",
+                    "process finished and returned its resources");
+        renderState(result.state);
+    } catch (error) {
+        showResult("Release failed", error.message, "error");
+    }
 });
 
 async function initialize() {

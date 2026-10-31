@@ -708,3 +708,19 @@ grid-template-columns: 1fr;
   color: var(--red);
   font-size: 25px;
 }
+
+.release-btn {
+  background: var(--primary-light);
+  border: 0;
+  border-radius: 7px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 11px;
+}
+
+.release-btn:hover {
+  background: #dedbff;
+}
+
+.navigation { margin-bottom: auto; }
