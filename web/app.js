@@ -107,7 +107,7 @@ function renderAllocationTable(state) {
     const header = `
         <tr>
             <th>Process</th>
-            ${Array.from({ length: state.m }, (_, j) => `<th>R${j}</th>`).join("")}
+            ${Array.from({ length: state.m }, (_, j) => `<th>Alloc R${j}</th>`).join("")}
             ${Array.from({ length: state.m }, (_, j) => `<th>Max R${j}</th>`).join("")}
             ${Array.from({ length: state.m }, (_, j) => `<th>Need R${j}</th>`).join("")}
         </tr>
@@ -165,9 +165,9 @@ function renderState(result) {
 }
 
 function showResult(title, message, status) {
-    elements.requestResult.className = `result-box result-${status}`;
+    elements.requestResult.className = `result-box ${({ success: 'granted', warning: 'waiting', error: 'denied' })[status] || ''}`;
     elements.requestResult.innerHTML = `
-        <h3>${escapeHtml(title)}</h3>
+        <strong>${escapeHtml(title)}</strong>
         <p>${escapeHtml(message)}</p>
     `;
 }

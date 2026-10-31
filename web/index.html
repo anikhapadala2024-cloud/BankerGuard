@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="BankerGuard resource allocation and deadlock avoidance simulator">
     <title>BankerGuard | Resource Allocation Simulator</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
     <script src="app.js" defer></script>
 </head>
 <body>
     <div class="app-layout">
 
-```
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-icon">BG</div>
@@ -120,23 +120,7 @@
             </div>
 
             <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Process</th>
-                            <th>Allocation</th>
-                            <th>Maximum</th>
-                            <th>Need</th>
-                        </tr>
-                    </thead>
-                    <tbody id="allocation-table">
-                        <tr><td>P0</td><td>0 1 0</td><td>7 5 3</td><td>7 4 3</td></tr>
-                        <tr><td>P1</td><td>2 0 0</td><td>3 2 2</td><td>1 2 2</td></tr>
-                        <tr><td>P2</td><td>3 0 2</td><td>9 0 2</td><td>6 0 0</td></tr>
-                        <tr><td>P3</td><td>2 1 1</td><td>2 2 2</td><td>0 1 1</td></tr>
-                        <tr><td>P4</td><td>0 0 2</td><td>4 3 3</td><td>4 3 1</td></tr>
-                    </tbody>
-                </table>
+                <table id="allocation-table"></table>
             </div>
 
             <div class="safe-sequence-box">
@@ -226,11 +210,12 @@
                             <th>Process</th>
                             <th>Request</th>
                             <th>Decision</th>
+                            <th>Reason</th>
                         </tr>
                     </thead>
                     <tbody id="activity-table">
                         <tr id="empty-log">
-                            <td colspan="4" class="empty-state">No requests processed yet.</td>
+                            <td colspan="5" class="empty-state">No requests processed yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -244,7 +229,6 @@
 
     </main>
 </div>
-```
 
 </body>
 </html>
