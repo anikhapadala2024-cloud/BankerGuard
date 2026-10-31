@@ -193,6 +193,43 @@
             </div>
         </section>
 
+        <section id="scenarios" class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">SCENARIOS &amp; QUEUE</p>
+                    <h2>Presets and Pending Requests</h2>
+                </div>
+                <span class="small-badge" id="pending-count">0 pending</span>
+            </div>
+
+            <p class="section-description">
+                Load a ready-made scenario, or watch blocked requests wait here.
+                When a process is released, every pending request is retried automatically.
+            </p>
+
+            <div class="preset-row">
+                <button type="button" class="secondary-button preset-btn" data-preset="standard">Standard example (reset)</button>
+                <button type="button" class="secondary-button preset-btn" data-preset="unsafe">Unsafe state (nothing free)</button>
+                <button type="button" class="secondary-button preset-btn" data-preset="tapes">Tape-drive demo (1 resource)</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>Request</th>
+                            <th>Why it is waiting</th>
+                            <th>Queued at</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-list">
+                        <tr><td colspan="4" class="empty-state">No pending requests.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section id="activity" class="panel">
             <div class="section-heading">
                 <div>

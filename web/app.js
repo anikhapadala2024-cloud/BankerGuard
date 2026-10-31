@@ -20,7 +20,9 @@ const elements = {
     ],
     requestResult: $("#request-result"),
     activityTable: $("#activity-table"),
-    clearLog: $("#clear-log")
+    clearLog: $("#clear-log"),
+    pendingList: $("#pending-list"),
+    pendingCount: $("#pending-count")
 };
 
 const initialState = {
@@ -264,6 +266,7 @@ elements.requestForm.addEventListener("submit", async (event) => {
         );
 
         addActivity(pid, requestVector, result.result, result.reason);
+        queueAfterRequest(pid, requestVector, result);
         requestCount++;
         elements.requestCount.textContent = requestCount;
 
@@ -295,15 +298,20 @@ elements.allocationTable.addEventListener("click", async (event) => {
     try {
         const result = await apiPost("/api/release", { ...statePayload(), pid });
 
-        showResult(
-            "Resources released",
-            `P${pid} returned (${result.released.join(", ")}) to the available pool.`,
-            "success"
-        );
-
+        renderState(result.state);
+        pendingRequests = pendingRequests.filter(item => item.pid !== pid);
         addActivity(pid, result.released, "RELEASED",
                     "process finished and returned its resources");
-        renderState(result.state);
+
+        const before = pendingRequests.length;
+        await retryPending();
+        const resolved = before - pendingRequests.length;
+
+        let message = `P${pid} returned (${result.released.join(", ")}) to the available pool.`;
+        if (resolved > 0) {
+            message += ` ${resolved} queued request(s) were retried and resolved.`;
+        }
+        showResult("Resources released", message, "success");
     } catch (error) {
         showResult("Release failed", error.message, "error");
     }
@@ -328,4 +336,115 @@ async function initialize() {
     }
 }
 
+// ---------- Pending queue: WAIT and UNSAFE requests are retried after a release ----------
+let pendingRequests = [];
+
+function renderPending() {
+    elements.pendingCount.textContent = `${pendingRequests.length} pending`;
+
+    if (!pendingRequests.length) {
+        elements.pendingList.innerHTML =
+            `<tr><td colspan="4" class="empty-state">No pending requests.</td></tr>`;
+        return;
+    }
+
+    elements.pendingList.innerHTML = pendingRequests.map(item => `
+        <tr>
+            <td>P${item.pid}</td>
+            <td>(${item.request.join(", ")})</td>
+            <td>${escapeHtml(item.reason)}</td>
+            <td>${escapeHtml(item.time)}</td>
+        </tr>
+    `).join("");
+}
+
+function enqueue(pid, request, reason) {
+    // A blocked process has one outstanding request, so a new one replaces the old.
+    pendingRequests = pendingRequests.filter(item => item.pid !== pid);
+    pendingRequests.push({
+        pid,
+        request,
+        reason,
+        time: new Date().toLocaleTimeString()
+    });
+    renderPending();
+}
+
+function queueAfterRequest(pid, request, result) {
+    if (result.result === "WAIT" || result.result === "UNSAFE") {
+        enqueue(pid, request, result.reason);
+    } else if (result.result === "GRANTED") {
+        pendingRequests = pendingRequests.filter(item => item.pid !== pid);
+        renderPending();
+    }
+}
+
+async function retryPending() {
+    let progress = true;
+
+    while (progress && pendingRequests.length) {
+        progress = false;
+
+        for (const item of [...pendingRequests]) {
+            const result = await apiPost("/api/request", {
+                ...statePayload(),
+                pid: item.pid,
+                request: item.request
+            });
+
+            if (result.result === "GRANTED") {
+                pendingRequests = pendingRequests.filter(p => p !== item);
+                renderState(result.state);
+                addActivity(item.pid, item.request, "GRANTED (queued)", result.reason);
+                progress = true;
+            } else if (result.result === "INVALID") {
+                pendingRequests = pendingRequests.filter(p => p !== item);
+                addActivity(item.pid, item.request, "DROPPED", result.reason);
+            } else {
+                item.reason = result.reason;
+            }
+        }
+    }
+
+    renderPending();
+}
+
+// ---------- Scenario presets ----------
+const presets = {
+    standard: structuredClone(initialState),
+    unsafe: { ...structuredClone(initialState), available: [0, 0, 0] },
+    tapes: {
+        n: 3,
+        m: 1,
+        available: [3],
+        max: [[10], [4], [9]],
+        alloc: [[5], [2], [2]]
+    }
+};
+
+const presetNotes = {
+    standard: "Textbook example: 5 processes, 3 resource types. The state is SAFE.",
+    unsafe: "Nothing is free, so no process can finish. The state is UNSAFE.",
+    tapes: "One resource type, 12 units. Use only the R0 box. Try P2 requesting 1 (denied: unsafe, queued), then P1 requesting 2 (granted)."
+};
+
+async function loadPreset(name) {
+    currentState = structuredClone(presets[name]);
+    pendingRequests = [];
+    renderPending();
+    populateProcessSelect(currentState.n);
+
+    try {
+        await refreshSafety();
+        showResult("Scenario loaded", presetNotes[name], "success");
+    } catch (error) {
+        showResult("Backend connection failed", error.message, "error");
+    }
+}
+
+document.querySelectorAll(".preset-btn").forEach(button => {
+    button.addEventListener("click", () => loadPreset(button.dataset.preset));
+});
+
+renderPending();
 initialize();

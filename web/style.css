@@ -724,3 +724,10 @@ grid-template-columns: 1fr;
 }
 
 .navigation { margin-bottom: auto; }
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
