@@ -13,18 +13,15 @@ const elements = {
     safeSequence: $("#safe-sequence"),
     requestForm: $("#request-form"),
     processId: $("#process-id"),
-    requestInputs: [
-        $("#request-r0"),
-        $("#request-r1"),
-        $("#request-r2")
-    ],
+    get requestInputs() { return [...document.querySelectorAll("#request-fields input")]; },
     requestResult: $("#request-result"),
     activityTable: $("#activity-table"),
     clearLog: $("#clear-log"),
     pendingList: $("#pending-list"),
     pendingCount: $("#pending-count"),
     resourceNames: $("#resource-names"),
-    processBadge: $("#process-badge")
+    processBadge: $("#process-badge"),
+    editorTable: $("#editor-table")
 };
 
 const initialState = {
@@ -149,9 +146,7 @@ function renderSummary(result) {
     elements.resourceNames.textContent =
         Array.from({ length: result.m }, (_, j) => `R${j}`).join(", ");
     elements.processBadge.textContent = `${result.n} Processes`;
-    elements.requestInputs.forEach((input, j) => {
-        input.closest("label").style.display = j < result.m ? "" : "none";
-    });
+    syncRequestFields(result.m);
     elements.safetyStatus.textContent = result.safe ? "SAFE" : "UNSAFE";
     elements.safetyDescription.textContent = result.safe
         ? "A safe sequence exists"
@@ -174,6 +169,7 @@ function renderState(result) {
     renderAllocationTable(currentState);
     renderSequence(result);
     renderSummary(result);
+    syncDraft();
 }
 
 function showResult(title, message, status) {
@@ -452,6 +448,139 @@ async function loadPreset(name) {
 
 document.querySelectorAll(".preset-btn").forEach(button => {
     button.addEventListener("click", () => loadPreset(button.dataset.preset));
+});
+
+// ---------- Dynamic request boxes ----------
+function syncRequestFields(m) {
+    const container = $("#request-fields");
+    if (container.querySelectorAll("input").length === m) return;
+
+    container.innerHTML = Array.from({ length: m }, (_, j) => `
+        <label class="form-field">
+            Request R${j}
+            <input id="request-r${j}" type="number" min="0" step="1" value="0" required>
+        </label>
+    `).join("");
+}
+
+// ---------- System editor ----------
+let draft = structuredClone(initialState);
+
+const cellValue = (v) => (Number.isNaN(v) ? "" : v);
+const editorError = (message) => showResult("System editor", message, "error");
+
+function syncDraft() {
+    draft = structuredClone(currentState);
+    renderEditor();
+}
+
+function renderEditor() {
+    const m = draft.m;
+    const cols = (prefix) =>
+        Array.from({ length: m }, (_, j) => `<th>${prefix} R${j}</th>`).join("");
+    const cell = (kind, i, j, v) =>
+        `<td><input class="cell" type="number" min="0" step="1"
+            data-kind="${kind}" data-i="${i}" data-j="${j}" value="${cellValue(v)}"></td>`;
+
+    const header = `<tr><th>Process</th>${cols("Alloc")}${cols("Max")}</tr>`;
+
+    const availableRow = `<tr>
+        <th scope="row">Available</th>
+        ${draft.available.map((v, j) => cell("available", 0, j, v)).join("")}
+        <td colspan="${m}" class="editor-note">free instances of each resource</td>
+    </tr>`;
+
+    const rows = draft.alloc.map((row, i) => `<tr>
+        <th scope="row">P${i}</th>
+        ${row.map((v, j) => cell("alloc", i, j, v)).join("")}
+        ${draft.max[i].map((v, j) => cell("max", i, j, v)).join("")}
+    </tr>`).join("");
+
+    elements.editorTable.innerHTML = header + availableRow + rows;
+}
+
+elements.editorTable.addEventListener("input", (event) => {
+    const input = event.target.closest(".cell");
+    if (!input) return;
+
+    const j = Number(input.dataset.j);
+    const value = input.value === "" ? NaN : Number(input.value);
+
+    if (input.dataset.kind === "available") {
+        draft.available[j] = value;
+    } else {
+        draft[input.dataset.kind][Number(input.dataset.i)][j] = value;
+    }
+});
+
+$("#add-process").addEventListener("click", () => {
+    if (draft.n >= 10) return editorError("At most 10 processes are supported.");
+    draft.alloc.push(Array(draft.m).fill(0));
+    draft.max.push(Array(draft.m).fill(0));
+    draft.n++;
+    renderEditor();
+});
+
+$("#remove-process").addEventListener("click", () => {
+    if (draft.n <= 1) return editorError("At least 1 process is required.");
+    draft.alloc.pop();
+    draft.max.pop();
+    draft.n--;
+    renderEditor();
+});
+
+$("#add-resource").addEventListener("click", () => {
+    if (draft.m >= 5) return editorError("At most 5 resource types are supported.");
+    draft.available.push(0);
+    draft.alloc.forEach(row => row.push(0));
+    draft.max.forEach(row => row.push(0));
+    draft.m++;
+    renderEditor();
+});
+
+$("#remove-resource").addEventListener("click", () => {
+    if (draft.m <= 1) return editorError("At least 1 resource type is required.");
+    draft.available.pop();
+    draft.alloc.forEach(row => row.pop());
+    draft.max.forEach(row => row.pop());
+    draft.m--;
+    renderEditor();
+});
+
+$("#load-current").addEventListener("click", syncDraft);
+
+$("#apply-editor").addEventListener("click", async () => {
+    const values = [...draft.available, ...draft.alloc.flat(), ...draft.max.flat()];
+    if (values.some(v => !Number.isSafeInteger(v) || v < 0)) {
+        return editorError("Every box must hold a non-negative whole number.");
+    }
+
+    try {
+        const result = await apiPost("/api/check", {
+            n: draft.n,
+            m: draft.m,
+            available: draft.available,
+            max: draft.max,
+            alloc: draft.alloc
+        });
+
+        pendingRequests = [];
+        renderPending();
+        renderState(result);
+        populateProcessSelect(result.n);
+
+        if (result.safe) {
+            showResult("System is SAFE",
+                "Safe sequence: " + result.safe_sequence.map(p => "P" + p).join(" \u2192 "),
+                "success");
+        } else {
+            showResult("System is UNSAFE",
+                "No order of process completion lets every process finish.",
+                "error");
+        }
+    } catch (error) {
+        showResult("Cannot apply", error.message, "error");
+    }
 });
 
 renderPending();

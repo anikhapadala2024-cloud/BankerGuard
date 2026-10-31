@@ -731,3 +731,33 @@ grid-template-columns: 1fr;
   gap: 10px;
   margin-bottom: 20px;
 }
+
+.request-fields { display: contents; }
+
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cell {
+  background: #fbfcfe;
+  border: 1px solid #dfe5ef;
+  border-radius: 8px;
+  color: var(--text);
+  min-height: 36px;
+  padding: 6px 8px;
+  width: 64px;
+}
+
+.cell:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 91, 219, 0.1);
+  outline: none;
+}
+
+.editor-note {
+  color: var(--muted);
+  font-size: 11px;
+}

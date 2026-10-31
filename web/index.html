@@ -25,6 +25,7 @@
         <nav class="navigation" aria-label="Main navigation">
             <a class="nav-link active" href="#overview">▦ &nbsp; Overview</a>
             <a class="nav-link" href="#resources">▤ &nbsp; Resources</a>
+            <a class="nav-link" href="#editor">&#9998; &nbsp; System Editor</a>
             <a class="nav-link" href="#simulator">⇄ &nbsp; Request Simulator</a>
             <a class="nav-link" href="#activity">☷ &nbsp; Activity Log</a>
         </nav>
@@ -165,20 +166,7 @@
                         </select>
                     </label>
 
-                    <label class="form-field">
-                        Request R0
-                        <input id="request-r0" type="number" min="0" step="1" value="0" required>
-                    </label>
-
-                    <label class="form-field">
-                        Request R1
-                        <input id="request-r1" type="number" min="0" step="1" value="0" required>
-                    </label>
-
-                    <label class="form-field">
-                        Request R2
-                        <input id="request-r2" type="number" min="0" step="1" value="0" required>
-                    </label>
+                    <div id="request-fields" class="request-fields"></div>
                 </div>
 
                 <div class="form-actions">
@@ -190,6 +178,37 @@
             <div id="request-result" class="result-box" role="status" aria-live="polite">
                 <strong>Ready to evaluate</strong>
                 <p>Submit a resource request to see its decision.</p>
+            </div>
+        </section>
+
+        <section id="editor" class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">CUSTOM SYSTEM</p>
+                    <h2>System Editor</h2>
+                </div>
+                <span class="small-badge">Edit &amp; analyse</span>
+            </div>
+
+            <p class="section-description">
+                Change Available, Allocation and Maximum, add or remove processes and
+                resource types, then apply to check whether the new state is safe.
+            </p>
+
+            <div class="editor-actions">
+                <button type="button" class="secondary-button" id="add-process">+ Process</button>
+                <button type="button" class="secondary-button" id="remove-process">&minus; Process</button>
+                <button type="button" class="secondary-button" id="add-resource">+ Resource</button>
+                <button type="button" class="secondary-button" id="remove-resource">&minus; Resource</button>
+                <button type="button" class="secondary-button" id="load-current">Load current state</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="editor-table"></table>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="primary-button" id="apply-editor">Apply &amp; Check Safety</button>
             </div>
         </section>
 
