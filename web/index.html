@@ -105,7 +105,10 @@
                     <p class="eyebrow">CURRENT SYSTEM STATE</p>
                     <h2>Resource Allocation Matrix</h2>
                 </div>
-                <span class="small-badge" id="process-badge">5 Processes</span>
+                <div class="log-actions">
+                    <span class="small-badge" id="process-badge">5 Processes</span>
+                    <button type="button" class="secondary-button" id="reset-standard">Reset to standard</button>
+                </div>
             </div>
 
             <div class="available-box">
@@ -201,6 +204,9 @@
                 <button type="button" class="secondary-button" id="add-resource">+ Resource</button>
                 <button type="button" class="secondary-button" id="remove-resource">&minus; Resource</button>
                 <button type="button" class="secondary-button" id="load-current">Load current state</button>
+                <button type="button" class="secondary-button" id="save-state">Save state (JSON)</button>
+                <button type="button" class="secondary-button" id="load-state">Load state (JSON)</button>
+                <input type="file" id="load-file" accept="application/json,.json" hidden>
             </div>
 
             <div class="table-wrapper">
@@ -255,7 +261,10 @@
                     <p class="eyebrow">SESSION HISTORY</p>
                     <h2>Activity Log</h2>
                 </div>
-                <button type="button" id="clear-log" class="secondary-button">Clear Log</button>
+                <div class="log-actions">
+                    <button type="button" id="export-log" class="secondary-button">Export CSV</button>
+                    <button type="button" id="clear-log" class="secondary-button">Clear Log</button>
+                </div>
             </div>
 
             <div class="table-wrapper">

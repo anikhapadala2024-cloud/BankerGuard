@@ -583,5 +583,83 @@ $("#apply-editor").addEventListener("click", async () => {
     }
 });
 
+// ---------- Export / import ----------
+function downloadFile(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+const today = () => new Date().toISOString().slice(0, 10);
+const csvCell = (value) => `"${String(value).replace(/"/g, '""')}"`;
+
+$("#export-log").addEventListener("click", () => {
+    if (!activityLog.length) {
+        return showResult("Nothing to export",
+            "The activity log is empty. Submit a request first.", "warning");
+    }
+
+    const header = ["Time", "Process", "Request", "Decision", "Reason"];
+    const rows = activityLog.slice().reverse().map(item =>
+        [item.time, `P${item.pid}`, item.request, item.result, item.reason]);
+
+    const csv = [header, ...rows]
+        .map(row => row.map(csvCell).join(","))
+        .join("\r\n");
+
+    downloadFile(`bankerguard-log-${today()}.csv`, "\ufeff" + csv, "text/csv;charset=utf-8");
+    showResult("Log exported", `${rows.length} entries saved as a CSV file.`, "success");
+});
+
+$("#save-state").addEventListener("click", () => {
+    const payload = { app: "BankerGuard", version: 1, state: statePayload() };
+    downloadFile(`bankerguard-state-${today()}.json`,
+        JSON.stringify(payload, null, 2), "application/json");
+    showResult("State saved",
+        "The current system was saved as a JSON file.", "success");
+});
+
+$("#load-state").addEventListener("click", () => $("#load-file").click());
+
+$("#load-file").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > 100000) {
+        return showResult("Cannot load file", "That file is too large to be a saved state.", "error");
+    }
+
+    try {
+        const data = JSON.parse(await file.text());
+        const s = data.state || data;
+
+        const result = await apiPost("/api/check", {
+            n: s.n, m: s.m, available: s.available, max: s.max, alloc: s.alloc
+        });
+
+        pendingRequests = [];
+        renderPending();
+        renderState(result);
+        populateProcessSelect(result.n);
+
+        showResult("State loaded",
+            `${file.name}: ${result.n} processes, ${result.m} resources, system is ${result.safe ? "SAFE" : "UNSAFE"}.`,
+            result.safe ? "success" : "warning");
+    } catch (error) {
+        showResult("Cannot load file",
+            error instanceof SyntaxError ? "That file is not valid JSON." : error.message,
+            "error");
+    }
+});
+
+$("#reset-standard").addEventListener("click", () => loadPreset("standard"));
+
 renderPending();
 initialize();

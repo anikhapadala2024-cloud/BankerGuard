@@ -761,3 +761,8 @@ grid-template-columns: 1fr;
   color: var(--muted);
   font-size: 11px;
 }
+
+.log-actions {
+  display: flex;
+  gap: 10px;
+}
