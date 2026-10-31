@@ -22,7 +22,9 @@ const elements = {
     activityTable: $("#activity-table"),
     clearLog: $("#clear-log"),
     pendingList: $("#pending-list"),
-    pendingCount: $("#pending-count")
+    pendingCount: $("#pending-count"),
+    resourceNames: $("#resource-names"),
+    processBadge: $("#process-badge")
 };
 
 const initialState = {
@@ -144,6 +146,12 @@ function renderSequence(result) {
 function renderSummary(result) {
     elements.processCount.textContent = result.n;
     elements.resourceCount.textContent = result.m;
+    elements.resourceNames.textContent =
+        Array.from({ length: result.m }, (_, j) => `R${j}`).join(", ");
+    elements.processBadge.textContent = `${result.n} Processes`;
+    elements.requestInputs.forEach((input, j) => {
+        input.closest("label").style.display = j < result.m ? "" : "none";
+    });
     elements.safetyStatus.textContent = result.safe ? "SAFE" : "UNSAFE";
     elements.safetyDescription.textContent = result.safe
         ? "A safe sequence exists"
